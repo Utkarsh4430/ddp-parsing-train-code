@@ -1,9 +1,7 @@
-import numpy as np
 import re
 import global_config
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 
 
@@ -32,6 +30,9 @@ class NeuralParser(nn.Module):
         batch_embedding_after_bert = self.language_backbone(batch_input_tensor, attention_mask=attention_mask)[0]
 
         batch_token_len_list = torch.sum(batch_tokenized["attention_mask"], dim=1).detach().numpy().tolist()
+        # print(batch_tokenized, batch_token_len_list)
+        # print(batch_tokenized.encodings[1])
+        # print(batch_tokenized.tokens)
         batch_token_list = [batch_tokenized.encodings[i].tokens[:batch_token_len_list[i]] for i in range(current_batch_size)]
 
         output_embedding_list = []
@@ -195,6 +196,7 @@ class Model:
                 tmp_relation_list.append(one_step_relation)
 
             link_prediction.append(tmp_point_list)
+            # print(len(link_prediction))
             relation_prediction.append(tmp_relation_list)
 
         link_loss = link_loss / loss_accumulate_number
@@ -204,7 +206,7 @@ class Model:
 
     def batch_infer(self, batch):
         self.agent.eval()
-        
+
         input_text = [i.strip().split("<utterance>") for i in batch]
         edu_number = [len(i) for i in input_text]
         link_prediction, relation_prediction = [], []

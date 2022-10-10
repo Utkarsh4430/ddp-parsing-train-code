@@ -1,7 +1,6 @@
 import os
 import random
 import time
-from collections import Counter
 
 import torch
 import numpy as np
@@ -12,9 +11,9 @@ from Model import Model
 
 import global_config
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '6'
 running_random_number = random.randint(1000, 9999)
-
+print(running_random_number)
 running_log_name = "./running_log/" + time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + "_" + str(running_random_number) + ".txt"
 open(running_log_name, "w")
 
@@ -129,7 +128,7 @@ def train_process(model, train_batches):
     train_epoch = 0
 
     best_stac_link_f1, best_stac_merge_f1 = {"epoch": 0, "link_f1": 0, "relation_f1": 0, "merge_f1": 0}, {"epoch": 0, "link_f1": 0, "relation_f1": 0, "merge_f1": 0}
-    best_mol_link_f1, best_mol_merge_f1 = {"epoch": 0, "link_f1": 0, "relation_f1": 0, "merge_f1": 0}, {"epoch": 0, "link_f1": 0, "relation_f1": 0, "merge_f1": 0}
+    # best_mol_link_f1, best_mol_merge_f1 = {"epoch": 0, "link_f1": 0, "relation_f1": 0, "merge_f1": 0}, {"epoch": 0, "link_f1": 0, "relation_f1": 0, "merge_f1": 0}
 
     while train_epoch < global_config.num_epochs:
         summary_steps = 0
@@ -154,7 +153,7 @@ def train_process(model, train_batches):
                 print(train_epoch, summary_steps, "training loss", loss_link + loss_rel, "loss_link", loss_link, "loss_rel", loss_rel)
 
         best_stac_link_f1, best_stac_merge_f1 = evaluate_process(model, stac_test_batches, train_epoch, best_stac_link_f1, best_stac_merge_f1)
-        best_mol_link_f1, best_mol_merge_f1 = evaluate_process(model, mol_test_batches, train_epoch, best_mol_link_f1, best_mol_merge_f1)
+        # best_mol_link_f1, best_mol_merge_f1 = evaluate_process(model, mol_test_batches, train_epoch, best_mol_link_f1, best_mol_merge_f1)
 
         train_epoch += 1
 
@@ -168,8 +167,8 @@ def train_process(model, train_batches):
         save_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         fp.write(save_time + " Best stac link result: " + str(best_stac_link_f1) + "\n")
         fp.write(save_time + " Best stac merge result: " + str(best_stac_merge_f1) + "\n")
-        fp.write(save_time + " Best mol link result: " + str(best_mol_link_f1) + "\n")
-        fp.write(save_time + " Best mol merge result: " + str(best_mol_merge_f1) + "\n\n")
+        # fp.write(save_time + " Best mol link result: " + str(best_mol_link_f1) + "\n")
+        # fp.write(save_time + " Best mol merge result: " + str(best_mol_merge_f1) + "\n\n")
 
 
 def evaluate_process(model, test_batches, train_epoch, best_link_f1=None, best_merge_f1=None, preview=False):
@@ -187,16 +186,18 @@ def evaluate_process(model, test_batches, train_epoch, best_link_f1=None, best_m
     if preview:
         pass
 
-    all_target_link_flatten, all_predict_link_flatten = [j for i in all_target_link for j in i], [j for i in all_predict_link for j in i]
+    all_target_link_flatten, all_predict_link_flatten = [j for i in all_target_link for j in i], [j[1] for i in all_predict_link for j in i]
     print("\nTest Result in epoch:", train_epoch)
+    # print(len(all_target_link_flatten))
+    # print(all_predict_link_flatten)
     link_f1 = f1_score(all_target_link_flatten, all_predict_link_flatten, average="micro")
     print("Link F1:", link_f1)
-    print(all_predict_link[:5], "\n", all_target_link[:5])
+    # print(all_predict_link[:5], "\n", all_target_link[:5])
 
     all_target_rel_flatten, all_predict_rel_flatten = [j for i in all_target_rel for j in i], [j for i in all_predict_rel for j in i]
     relation_f1 = f1_score(all_target_rel_flatten, all_predict_rel_flatten, average="micro")
     print("Relation F1:", relation_f1)
-    print(all_predict_rel[:5], "\n", all_target_rel[:5])
+    # print(all_predict_rel[:5], "\n", all_target_rel[:5])
 
     merge_f1 = [1 if (all_target_link_flatten[i] == all_predict_link_flatten[i]) and (all_target_rel_flatten[i] == all_predict_rel_flatten[i]) else 0 for i in
                 range(len(all_target_link_flatten))]
@@ -229,8 +230,8 @@ if __name__ == '__main__':
                      'Elaboration': 6, 'Clarification_question': 7, 'Conditional': 8, 'Continuation': 9, 'Result': 10, 'Explanation': 11,
                      'Q-Elab': 12, 'Alternation': 13, 'Narration': 14, 'Background': 15, 'Break': 16}
 
-    mol_data_train = load_data('./data/molweni_data/train_data.json', map_relations)
-    mol_data_test = load_data('./data/molweni_data/test_data.json', map_relations)
+    # mol_data_train = load_data('./data/molweni_data/train_data.json', map_relations)
+    # mol_data_test = load_data('./data/molweni_data/test_data.json', map_relations)
 
     stac_data_train = load_data('./data/stac_data/train_data.json', map_relations)
     stac_data_test = load_data('./data/stac_data/test_data.json', map_relations)
@@ -238,22 +239,22 @@ if __name__ == '__main__':
 
     assert len(map_relations.keys()) == 18
 
-    mol_data_train = unify_dependency_annotation(mol_data_train)
-    mol_data_test = unify_dependency_annotation(mol_data_test)
+    # mol_data_train = unify_dependency_annotation(mol_data_train)
+    # mol_data_test = unify_dependency_annotation(mol_data_test)
 
     stac_data_train = unify_dependency_annotation(stac_data_train)
     stac_data_test = unify_dependency_annotation(stac_data_test)
 
-    data_train = mol_data_train + stac_data_train
+    data_train = stac_data_train
 
     print('Train Dataset sizes: %d' % (len(data_train)))
-    print('Test Dataset sizes: %d %d' % (len(stac_data_test), len(mol_data_test)))
+    print('Test Dataset sizes: %d' % (len(stac_data_test)))
 
     random.seed(100)
     random.shuffle(data_train)
 
     train_batches = get_batches(data_train, global_config.batch_size)
-    mol_test_batches = get_batches(mol_data_test, global_config.batch_size)
+    # mol_test_batches = get_batches(mol_data_test, global_config.batch_size)
     stac_test_batches = get_batches(stac_data_test, global_config.batch_size)
 
     model = Model()
@@ -267,5 +268,5 @@ if __name__ == '__main__':
         model.load_model(load_model_path)
 
         with torch.no_grad():
-            evaluate_process(model, mol_test_batches, 999)
+            # evaluate_process(model, mol_test_batches, 999)
             evaluate_process(model, stac_test_batches, 999)
